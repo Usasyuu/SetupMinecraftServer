@@ -8,9 +8,18 @@ yum install java-21-amazon-corretto-headless.aarch64 cronie -y
 systemctl enable crond.service
 systemctl start crond.service
 
-adduser minecraft
+# echo "ユーザー名を入力してください。"
+# read user
+user="minecraft"
+echo "フォルダーの名前を入力してください。"
+read folder
+echo "割り当てるメモリの量を入力してください。"
+read mem
 
-cd /home/minecraft
+
+adduser ${user}
+
+cd /home/${user}
 echo "downloading..."
 wget https://github.com/Usasyuu/AutoStop/releases/latest/download/AutoStop.jar
 
@@ -20,50 +29,46 @@ After=network-online.target
 
 [Service]
 Type=forking
-WorkingDirectory=/home/minecraft/
-ExecStart=screen -S autostop -d -m java -jar AutoStop.jar
+WorkingDirectory=/home/${user}/
+ExecStart=screen -S autostop -d -m java -Xmx64M -Xms64M -jar AutoStop.jar
 ExecStop=sleep 5
 Restart=on-failure
 
 [Install]
-WantedBy=multi-user.target" >> /etc/systemd/system/autostop.service
+WantedBy=multi-user.target" > /etc/systemd/system/autostop.service
 
 systemctl enable autostop
 systemctl start autostop
 
-echo "フォルダーの名前を入力してください。"
-read folder
-
-mkdir ./$folder
-chmod 777 /home/minecraft/$folder
+mkdir ./${folder}
+chown minecraft:minecraft /home/${user}/${folder}
 sed -i -e "s/LOG_PATH=logs/LOG_PATH=$folder\/logs/" settings.properties
 
 echo -e "[Unit]
-Description=Start Minecraft Paper 1.21
+Description=Start Minecraft Server
 After=network-online.target
 
 [Service]
 Type=forking
-WorkingDirectory=/home/minecraft/$folder/
+WorkingDirectory=/home/${user}/${folder}/
 User=minecraft
-ExecStart=screen -S mc -d -m nogui
+ExecStart=screen -S mc -d -m java -Xmx${mem}G -Xms${mem}G -jar server.jar nogui
+ExecStop=screen -p 0 -S mc -X eval 'stuff \"stop\"\\\015'
 ExecStop=sleep 10
-ExecStop=aws s3 cp $folder s3://minecraftbackup2 --recursive
+ExecStop=aws s3 cp ${folder} s3://minecraftbackup2/${folder} --recursive
 ExecStop=sleep 20
 Restart=on-failure
 
 [Install]
-WantedBy=multi-user.target" >> /etc/systemd/system/server.service
+WantedBy=multi-user.target" > /etc/systemd/system/server.service
 
-sudo systemctl daemon-reload
-sudo systemctl enable server.service
+systemctl daemon-reload
+systemctl enable server.service
 
-job="* */1 * * *  aws s3 cp $folder s3://minecraftbackup2 --recursive"
-
-echo "$job"
+job="* */1 * * *  aws s3 cp ${folder} s3://minecraftbackup2/${folder} --recursive"
 
 crontab -l > /tmp/crontab.temp
-echo "$job" >> /tmp/crontab.temp
+echo "${job}" >> /tmp/crontab.temp
 
 if crontab -u minecraft /tmp/crontab.temp
 then
