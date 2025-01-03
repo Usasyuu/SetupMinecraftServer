@@ -4,7 +4,7 @@
 
 yum update
 yum upgrade -y
-yum install java-21-amazon-corretto-headless.aarch64 cronie -y
+yum install java-21-amazon-corretto-headless cronie -y
 systemctl enable crond.service
 systemctl start crond.service
 
