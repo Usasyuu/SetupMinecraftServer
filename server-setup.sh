@@ -61,7 +61,6 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target" > /etc/systemd/system/server.service
 
-sed -i -e "s/LOG_PATH=logs/LOG_PATH=$folder\/logs/" /home/${user}/settings.properties
 systemctl daemon-reload
 systemctl enable server.service
 
@@ -77,3 +76,6 @@ else
     echo "crontab install is failed."
 fi
 rm /tmp/crontab.temp
+
+sleep 10
+sed -i -e "s/LOG_PATH=logs/LOG_PATH=$folder\/logs/" /home/${user}/settings.properties
