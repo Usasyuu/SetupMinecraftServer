@@ -21,7 +21,7 @@ adduser ${user}
 
 cd /home/${user}
 echo "downloading..."
-wget https://github.com/Usasyuu/AutoStop/releases/latest/download/AutoStop.jar
+curl -OL https://github.com/Usasyuu/AutoStop/releases/latest/download/AutoStop.jar
 
 echo -e "[Unit]
 Description=Start AutoStop Service
@@ -42,7 +42,6 @@ systemctl start autostop
 
 mkdir ./${folder}
 chown minecraft:minecraft /home/${user}/${folder}
-sed -i -e "s/LOG_PATH=logs/LOG_PATH=$folder\/logs/" settings.properties
 
 echo -e "[Unit]
 Description=Start Minecraft Server
@@ -62,6 +61,7 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target" > /etc/systemd/system/server.service
 
+sed -i -e "s/LOG_PATH=logs/LOG_PATH=$folder\/logs/" /home/${user}/settings.properties
 systemctl daemon-reload
 systemctl enable server.service
 
