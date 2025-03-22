@@ -64,7 +64,7 @@ WantedBy=multi-user.target" > /etc/systemd/system/server.service
 systemctl daemon-reload
 systemctl enable server.service
 
-job="* */1 * * *  aws s3 cp ${folder} s3://minecraftbackup2/${folder} --recursive"
+job="0 * * * *  aws s3 cp ${folder} s3://minecraftbackup2/${folder} --recursive"
 
 crontab -l > /tmp/crontab.temp
 echo "${job}" >> /tmp/crontab.temp
